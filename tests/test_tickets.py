@@ -65,7 +65,7 @@ class CreateTicketTests(unittest.TestCase):
         self.assertEqual(self.tickets, [])
 
     def test_invalid_affected_users_rejected(self):
-        for bad in (-1, "-3", "2.5", 2.5, "abc", "", None, True):
+        for bad in (-1, "-3", "2.5", 2.5, "abc", "", None, True, "²", "٣"):
             with self.subTest(value=bad):
                 with self.assertRaises(ValidationError):
                     create_ticket(self.tickets, "Issue", "Network", "low", bad)

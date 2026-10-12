@@ -58,7 +58,7 @@ def normalize_affected_users(value):
         number = value
     elif isinstance(value, str):
         text = value.strip()
-        if not text.isdigit():  # rejects '-3', '2.5', 'abc', ''
+        if not (text.isascii() and text.isdigit()):  # rejects '-3', '2.5', 'abc', '', '²'
             raise ValidationError(message)
         number = int(text)
     else:
