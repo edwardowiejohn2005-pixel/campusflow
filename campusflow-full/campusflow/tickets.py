@@ -46,26 +46,17 @@ def normalize_urgency(urgency):
     )
 
 
-def normalize_affected_users(value):
-    """Return a positive int, or raise ValidationError.
 
-    Rejects zero, negatives, decimals, booleans and non-numeric text.
-    """
+def normalize_affected_users(value):
+    """Accept only positive integers, rejecting bools and strings."""
+
     message = "affected_users must be a positive whole number (1 or more)."
-    if isinstance(value, bool):
+
+    if type(value) is not int or value < 1:
         raise ValidationError(message)
-    if isinstance(value, int):
-        number = value
-    elif isinstance(value, str):
-        text = value.strip()
-        if not (text.isascii() and text.isdigit()):  # rejects '-3', '2.5', 'abc', '', '²'
-            raise ValidationError(message)
-        number = int(text)
-    else:
-        raise ValidationError(message)
-    if number < 1:
-        raise ValidationError(message)
-    return number
+
+    return value
+
 
 
 def ticket_number(ticket_id):
@@ -103,6 +94,7 @@ def create_ticket(tickets, title, category, urgency, affected_users):
         "priority": calculate_priority(clean_urgency, clean_users),
         "status": "open",
         "assigned_to": None,
+        "notes": [],
     }
     tickets.append(ticket)
     return ticket
