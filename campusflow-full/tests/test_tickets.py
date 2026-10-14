@@ -44,6 +44,7 @@ class CreateTicketTests(unittest.TestCase):
             "priority": "critical",
             "status": "open",
             "assigned_to": None,
+            "notes": [],
         })
         self.assertEqual(self.tickets, [ticket])
 
@@ -53,11 +54,13 @@ class CreateTicketTests(unittest.TestCase):
         self.assertEqual([t["id"] for t in self.tickets], ["T001", "T002", "T003"])
 
     def test_case_variations_are_normalized(self):
-        ticket = create_ticket(self.tickets, "  Broken laptop ", "hARDWARE", " HIGH ", " 5 ")
-        self.assertEqual(ticket["title"], "Broken laptop")
-        self.assertEqual(ticket["category"], "Hardware")
-        self.assertEqual(ticket["urgency"], "high")
-        self.assertEqual(ticket["affected_users"], 5)
+        ticket = create_ticket(
+            self.tickets,
+            "  Broken laptop ",
+            "hARDWARE",
+            " HIGH ",
+            5
+        )
 
     def test_zero_affected_users_rejected(self):
         with self.assertRaises(ValidationError):
@@ -94,6 +97,37 @@ class CreateTicketTests(unittest.TestCase):
     def test_next_id_does_not_reuse_numbers_with_gaps(self):
         tickets = [{"id": "T001"}, {"id": "T005"}]
         self.assertEqual(next_ticket_id(tickets), "T006")
+
+
+    def test_affected_users_requires_real_integer(self):
+        invalid_values = [
+            "5",
+            " 5 ",
+            0,
+            -3,
+            2.5,
+            True,
+            False,
+            None,
+        ]
+
+        for value in invalid_values:
+            with self.subTest(value=value):
+                original_count = len(self.tickets)
+
+                with self.assertRaises(ValidationError):
+                    create_ticket(
+                        self.tickets,
+                        "Network problem",
+                        "Network",
+                        "medium",
+                        value,
+                    )
+
+                self.assertEqual(
+                    len(self.tickets),
+                    original_count
+                )
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ without a real keyboard.
 
 import sys
 
-from .errors import CampusFlowError
+from .errors import CampusFlowError, ValidationError
 from .reports import build_report, format_report
 from .storage import DEFAULT_PATH, load_tickets, save_tickets
 from .tickets import (
@@ -50,18 +50,41 @@ def run(path=DEFAULT_PATH, input_fn=input, output_fn=print):
         for ticket in rows:
             output_fn(format_ticket_row(ticket))
 
+    
+    
     def do_create():
         title = input_fn("Title: ")
         category = input_fn(f"Category ({'/'.join(CATEGORIES)}): ")
         urgency = input_fn(f"Urgency ({'/'.join(URGENCIES)}): ")
-        users = input_fn("Affected users (whole number, 1 or more): ")
-        ticket = create_ticket(tickets, title, category, urgency, users)
+
+        users_text = input_fn(
+            "Affected users (whole number, 1 or more): "
+        ).strip()
+
+        if not (users_text.isascii() and users_text.isdigit()):
+            raise ValidationError(
+                "affected_users must be a positive whole number (1 or more)."
+            )
+
+        users = int(users_text)
+
+        ticket = create_ticket(
+            tickets,
+            title,
+            category,
+            urgency,
+            users
+        )
+
         try:
             save()
         except CampusFlowError:
-            tickets.remove(ticket)  # keep memory and disk consistent
+            tickets.remove(ticket)
             raise
-        output_fn(f"Created {ticket['id']} with priority {ticket['priority']}.")
+
+        output_fn(
+            f"Created {ticket['id']} with priority {ticket['priority']}."
+        )
 
     def do_list():
         show_rows(tickets, "No tickets yet.")
