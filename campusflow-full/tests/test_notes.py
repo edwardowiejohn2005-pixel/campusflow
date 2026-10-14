@@ -65,5 +65,53 @@ class NoteTests(unittest.TestCase):
         self.assertEqual(note["note_id"], "N001")
 
 
+    def test_in_progress_ticket_accepts_note(self):
+        # Assign the ticket before starting work.
+        assign_ticket(
+            self.tickets,
+            "T001",
+            "Engineer A"
+        )
+
+        # Move ticket to in_progress.
+        change_status(
+            self.tickets,
+            "T001",
+            "in_progress"
+        )
+
+        # Add a note.
+        note = add_note(
+            self.tickets,
+            "T001",
+            "Engineer A",
+            "Investigating network connection"
+        )
+
+        self.assertEqual(note["note_id"], "N001")
+        self.assertEqual(len(self.tickets[0]["notes"]), 1)
+        self.assertEqual(
+            self.tickets[0]["status"],
+            "in_progress"
+        )
+
+
+    def test_unknown_status_rejects_note_without_mutation(self):
+        self.tickets[0]["status"] = "completed"
+
+        before = dict(self.tickets[0])
+
+        with self.assertRaises(InvalidTransitionError):
+            add_note(
+                self.tickets,
+                "T001",
+                "Engineer A",
+                "Checking completed ticket"
+            )
+
+        self.assertEqual(self.tickets[0], before)
+        self.assertEqual(self.tickets[0]["notes"], [])
+
+
 if __name__ == "__main__":
     unittest.main()

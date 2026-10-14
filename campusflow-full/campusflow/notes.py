@@ -10,9 +10,9 @@ def add_note(tickets, ticket_id, author, message):
 
     ticket = find_ticket(tickets, ticket_id)
 
-    if ticket["status"] == "resolved":
+    if ticket["status"] not in ("open", "in_progress"):
         raise InvalidTransitionError(
-            "Resolved tickets cannot receive notes. Reopen first."
+            "Notes can only be added to open or in_progress tickets."
         )
 
     if not isinstance(author, str) or not author.strip():
